@@ -13,7 +13,7 @@ public class Robot extends TimedRobot {
     public static Joystick joy;
     public static drivetrain dt;
     public static intakeMech intakemech;
-
+        //this is a yeet.... yeet.
     public void robotInit() {
         joy = new Joystick(0);
         arm = new Arm();
