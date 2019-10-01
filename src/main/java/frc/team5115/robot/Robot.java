@@ -9,24 +9,27 @@ public class Robot extends TimedRobot {
     //Olivia
     //Yeab
     //marie
-    public static Arm arm;
     public static Joystick joy;
     public static drivetrain dt;
-    public static intakeMech intakemech;
-        //this is a yeet.... yeet.
+    public static manueverinator manueverinatorinator;
+
     public void robotInit() {
         joy = new Joystick(0);
-        arm = new Arm();
         dt = new drivetrain();
-        intakemech.intakeStill();
-        intakemech = new intakeMech();
+        manueverinatorinator = new manueverinator();
     }
 
     public void teleopPeriodic() {
-        arm.moveArm();
-        dt.drive(joy.getRawAxis(0), joy.getRawAxis(1), 0.35); //change thrott with 1-j.getRawAxis(3)
-        intakemech.intakeOpen();
-        
+        if(joy.getRawButton(8)) {
+            manueverinatorinator.aim();
+            //manueverinatorinator.distancize();
+            //manueverinatorinator.printCoolStuff();
+            System.out.println("Manuverinator is manuverinatoring");
+        }
+        //System.out.println("Println is working");
+        else {
+            dt.drive(joy.getRawAxis(1), joy.getRawAxis(0), 0.35); //change thrott with 1-j.getRawAxis(3)
+        }
     }
 }
 
