@@ -4,6 +4,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.team5115.robot.Robot;
+import java.util.Arrays;
 
 // Docs: http://docs.limelightvision.io/en/latest/networktables_api.html
 
@@ -13,8 +14,6 @@ public class manueverinator {
     static NetworkTableEntry tx; // Measure of X offset angle
     static NetworkTableEntry ty; // Measure of Y offset angle
     static NetworkTableEntry ta; // Measure of image area
-    NetworkTableEntry tx0;
-    NetworkTableEntry ty0;
     NetworkTableEntry tv;
     NetworkTableEntry camtran;
     NetworkTableEntry LED;
@@ -31,10 +30,16 @@ public class manueverinator {
     public static double x_Offset; // The horizontal shift the robot needs to make in order to align
     public static double y_Offset; // The vertical shift the robot needs to make in order to align
     public static double hypotenuse; // Pythagorean of x-off and y-off
-    public static double calc_Angle; // The angle we calculated
 
-    double Kp = 0.1; //a modifier to the aim function.
-    double min_command = 0.05; //if the output to the motor is too small, then just use this value.
+
+    /* *
+    *   update camera height
+    *   update target height
+    *   update camera angle
+     */
+
+    private double Kp = 0.2; //a modifier to the aim function.
+    private double deadZoneDegrees = 5;
 
     // Load in the network tables
     public manueverinator(){
@@ -43,28 +48,13 @@ public class manueverinator {
         ty = limelight.getEntry("ty"); //Angle in y of degrees
         ta = limelight.getEntry("ta"); //Get area
         tv = limelight.getEntry("tv"); //have target?
-        tx0 = limelight.getEntry("tx0"); //raw something or another.
-        ty0 = limelight.getEntry("ty0"); //raw something or another.
-        camtran = limelight.getEntry("camtran"); //raw something or another.
+        camtran = limelight.getEntry("camtran"); //Raw 3d positioning
         LED = limelight.getEntry("ledMode");
         CAM = limelight.getEntry("camMode");
         pipeline = limelight.getEntry("pipeline");
     }
 
-    // Check to see if targets are visible
-    public boolean target() {
-        return tv.equals(1);
-    }
-
     // Return X-Offset angle from the limelight
-    public double xm_Angle() {
-        return tx.getDouble(0);
-    }
-
-    // Return Y-Offset angle from limelight
-    public double ym_Angle() {
-        return ty.getDouble(0);
-    }
 
     // Set the camera into camera mode
     public void s_Camera() {
@@ -78,53 +68,28 @@ public class manueverinator {
         CAM.setNumber(0); //Camera on vision processing mode.
     }
 
-    public static void gcamera_Angle() {
-        calc_Angle = Math.atan((target_height - camera_height)/hypotenuse) + y_Angle;
-        System.out.println(calc_Angle);
-    }
-
-    public static void calc_Distance() {
-        angle_sum = ty.getDouble(0) + camera_angle; //finds the overall angle from the ground to the center of the reflector.
-        y_Offset = (target_height - camera_height)/Math.tan(Math.toRadians(angle_sum)) + 0; // Add or subtract depending on inaccuracies.
-        //x_Offset = y_Offset * Math.sin(Math.toRadians(tx.getDouble(0))); //this is faulty... it does calculate a distance... but not the one we want.
-        // Display results
-        System.out.println("TX: " + tx.getDouble(0)); // Print the x-angle
-        System.out.println("TY: " + ty.getDouble(0)); // Print the y-angle
-        System.out.println("Vertical distance to target: " + y_Offset);
-        //System.out.println("Horizontal offset (not what you think it is): " + x_Offset); //this is wrong sadly...
-        System.out.println("=============="); // Spacer
-    }
-
     public void aim() {
 
         if(tv.getDouble(0) == 1) {
             double heading_error = -tx.getDouble(0); //how far off is it from the center of the screen
             double steering_adjust = 0; //a var that is the processes value that is added and taken from each wheel.
-            double left_command = 0;
-            double right_command = 0;
-            if (heading_error > 1.0) //if it is an error greater than one (significant)
+            if (Math.abs(heading_error) > deadZoneDegrees) //if it is an error greater than one (significant)
             {
-                steering_adjust = Kp * heading_error - min_command;
-            } else if (heading_error < 1.0) {
-                steering_adjust = Kp * heading_error + min_command;
+                steering_adjust = Kp * heading_error;
+            } else {
+                steering_adjust = 0;
             }
-            left_command += steering_adjust;
-            right_command -= steering_adjust;
 
-            Robot.dt.drive(0,0,0);
             //Help discovering errors:
             System.out.println("Heading Error: " + heading_error);
             System.out.println("Steering Adjustment: " + steering_adjust);
-            //System.out.println("Left wheel set at: " + left_command);
-            //System.out.println("Right wheel set at: " + right_command);
-            //System.out.println("-----------");
-            Robot.dt.drive(0,-steering_adjust,0.30);
+
+            Robot.dt.drive(0,-steering_adjust,0.30); //drive baby
         }
         else {
-            System.out.println("No target found. Doing nothing.");
-            //set motors to 0.
+            System.out.println("No target found. Stopping.");
+            //In the furure, maybe we should add a scanning function.
             Robot.dt.drive(0,0,0);
-
         }
     }
 
@@ -134,27 +99,54 @@ public class manueverinator {
         System.out.println("distance to target: " + y_Offset);
     }
 
-    public void printCoolStuff() { //hopefully prints something useful.
+    public void debug() {
+        System.out.println("tx: " + tx.getDouble(0));
+        System.out.println("ty: " + ty.getDouble(0));
+        System.out.println("tv: " + tv.getDouble(0));
+        //System.out.println(camtran);
 
-        System.out.println("tx0: " + tx0.getDouble(0));
-        System.out.println("ty0: " + ty0.getDouble(0));
-        System.out.println("camtran: " + camtran.getString(""));
+    }
 
+    public void print3dStuff() {
+        System.out.println("Rejoice! 3D numbers are apon us!");
+        double[] _3dStuff = camtran.getDoubleArray(new double[] {0, 0, 0, 0, 0, 0});
+        System.out.println("X value" + _3dStuff[0]);
+        System.out.println("1st Y value: " + _3dStuff[1]);
+        System.out.println("2nd Y value: "_3dStuff[2]);
+
+    }
+
+    public void getRawCorners() { //this boy is a yeet.
+        double[] mZeroArray = new double[]{0, 0, 0, 0, 0, 0, 0, 0};
+
+        double[] xCorners = limelight.getEntry("tcornx").getDoubleArray(mZeroArray); //get the raw corners. Use an empty array as the default value.
+        double[] yCorners = limelight.getEntry("tcorny").getDoubleArray(mZeroArray);
+
+        System.out.println("x raw corners" + Arrays.toString(xCorners));
+        System.out.println("Y raw corners" + Arrays.toString(yCorners));
     }
 
 }
 
+/**
+ * Things to fool around with
+ * 1) First run debug() and
+ * 2) then get aim running again.
+ * 3) getRawCorners() - just see what this prints because it might be cool.
+ * 4) distancize(10) - with this we can start to develop the bunny bots shooter code.
+ * 5)
+ *
+ */
+
 /*
     |\
-  X | \ hypotenuse
+  y | \ hypotenuse
     |  \
     |   \
     ______
     xoffset
 
-X = y offset.
-
-does this edit go through???
+y = y offset.
 
  */
 

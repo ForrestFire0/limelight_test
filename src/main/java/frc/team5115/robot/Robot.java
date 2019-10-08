@@ -21,10 +21,9 @@ public class Robot extends TimedRobot {
 
     public void teleopPeriodic() {
         if(joy.getRawButton(8)) {
-            manueverinatorinator.aim();
+            //manueverinatorinator.aim();
             //manueverinatorinator.distancize();
-            //manueverinatorinator.printCoolStuff();
-            System.out.println("Manuverinator is manuverinatoring");
+            /*Please look at the bottom of manueverinator*/
         }
         //System.out.println("Println is working");
         else {
