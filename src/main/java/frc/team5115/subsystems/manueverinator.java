@@ -12,14 +12,13 @@ import frc.team5115.robot.Robot;
 public class manueverinator {
 
     NetworkTable limelight;
-    static NetworkTableEntry tx; // Measure of X offset angle
-    static NetworkTableEntry ty; // Measure of Y offset angle
-    static NetworkTableEntry ta; // Measure of image area
-    NetworkTableEntry tv;
-    NetworkTableEntry camtran;
-    NetworkTableEntry LED;
-    NetworkTableEntry CAM;
-    NetworkTableEntry pipeline;
+    private static NetworkTableEntry tx; // Measure of X offset angle
+    private static NetworkTableEntry ty; // Measure of Y offset angle
+    private NetworkTableEntry tv;
+    private NetworkTableEntry camtran;
+    private NetworkTableEntry LED;
+    private NetworkTableEntry CAM;
+    private NetworkTableEntry pipeline;
 
     // Variables needed in calculation(s) -> All are static because thats what limelight wants ¯\_(ツ)_/¯
     double camera_height = 0; // The height of camera (fixed)
@@ -48,15 +47,13 @@ public class manueverinator {
         limelight = NetworkTableInstance.getDefault().getTable("limelight");
         tx = limelight.getEntry("tx"); //Angle in x of degrees
         ty = limelight.getEntry("ty"); //Angle in y of degrees
-        ta = limelight.getEntry("ta"); //Get area
         tv = limelight.getEntry("tv"); //have target?
         camtran = limelight.getEntry("camtran"); //Raw 3d positioning
         LED = limelight.getEntry("ledMode");
         CAM = limelight.getEntry("camMode");
         pipeline = limelight.getEntry("pipeline");
+
         navx = new AHRS(SerialPort.Port.kMXP);
-
-
     }
 
     public void navxAngleReset() {
@@ -105,11 +102,6 @@ public class manueverinator {
         }
     }
 
-    public void distancize(double targetDistance) { //updates the distance of the hypotenuse of the distance.
-        angle_sum = ty.getDouble(0) + camera_angle; //finds the overall angle from the ground to the center of the reflector.
-        hypotenuse = (target_height - camera_height)/Math.tan(Math.toRadians(angle_sum)) + 0; // Add or subtract depending on inaccuracies.
-        System.out.println("distance to target: " + yOffset);
-    }
 
     public void debug() {
         System.out.println("tx: " + tx.getDouble(0));
@@ -132,9 +124,8 @@ public class manueverinator {
      *
      * @param x The x offset from the thingy
      * @param y the y offfset from the thingy
-     * @return the angle the robot needs to hold.
+     * @return angle the angle the robot needs to hold.
      */
-
 
 
     private double findAngle(double x, double y) {
@@ -168,7 +159,6 @@ public class manueverinator {
 
         //everything checked out. Send value back.
         return angleRequested;
-
     }
 
 
@@ -206,19 +196,22 @@ public class manueverinator {
         }
         getYaw = relativize(navx.getYaw());  //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
 
-        update3dPoints();//acquire points, aka xoffset and y offset.
+        update3dPoints();//acquire new points, aka xoffset and y offset.
+
         System.out.println("X of 3D: " + xOffset + " Y of 3D: " + yOffset);
+
         double angleOffset = findAngle(xOffset,yOffset); //get the angle we need.
         System.out.println("Current Angle: " + getYaw + "Target Angle: " + angleOffset); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
+
         double turnOffset = getTurnValue(getYaw, angleOffset);
         System.out.println("Wheel offsets: " + turnOffset);
         //Robot.dt.drive(turnOffset, followingTrackSpeed,0.30); //drive baby
-
     }
 
     private float relativize(float yaw) {
         //this function needs to change the frame of the current position to the way we are looking at the wall. To start, we will line it up with the wall to get a good reference.
         // in a real game we will need it to dynamically detect where it is lining up to.
+
         return yaw;
     }
 
