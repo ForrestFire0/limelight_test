@@ -30,6 +30,7 @@ public class manueverinator {
     public double yOffset; // The vertical shift the robot needs to make in order to align
     public double hypotenuse; // Pythagorean of x-off and y-off
     private AHRS navx; //turn baby.
+    private float getYaw;
 
     /* *
     *   update camera height
@@ -140,33 +141,48 @@ public class manueverinator {
         double angle = 0;
         double targetY = locateTargetPoint();
         angle = getAngleFromTargetPoint(targetY);
-        if (isAngleChangeSafe(angle)) return angle;
-        else return safeAngle(angle);
+        return safeAngle(angle);
     }
 
     private double safeAngle(double angleRequested) { //given the angle requested, the change we need to make, and how much more we can turn without it going off the screen, return the maximun angle we can turn, given that it is NOT safe.
-        return 0;
+        //THIS IS LIKE 99% working. I tested a crap ton on codeHS.
+        //angleRequested: The new angle we want to hold, RTF (relative to field).
+        //getYaw: The current angle held RTF.
+        //currentOffset: where the target is in the cameras vision. NOT RTF.
+        double currentOffset = tx.getDouble(0);
+        getYaw = 10;
+        double degreesLeft = 30 - Math.abs(currentOffset);//the amount of degrees we can move before we go off the field, ABS.
+        //System.out.println("There are " + degreesLeft + " degrees left before the camera looses sight.");
+
+        if (angleRequested-getYaw > 30 + currentOffset) { //to the right
+            System.out.println("Limited. Trying to move TO FAR TO THE RIGHT");
+            //limit it to only come way to the right. add degrees left to the current angle.
+            return getYaw + degreesLeft;
+        }
+        else if (angleRequested-getYaw < -30 + currentOffset) { //to the LEFT
+            System.out.println("Limited. Trying to move TO FAR TO THE LEFT");
+            //limit it to only come way to the left. subtract degrees left to the current angle.
+            //because it should be to the left, which is negative.
+            return getYaw - degreesLeft;
+        }
+
+        //everything checked out. Send value back.
+        return angleRequested;
+
     }
 
-    private boolean isAngleChangeSafe(double angle) {
-        return true; //update this so that when the angle change is more than what the camera can still see, it poops out. Do this by getting the location of the target and then adding the angle
-    }
-
-
-    //note, target points are a two d array that is the X then the Y. relative to the limelight.
 
     private double getAngleFromTargetPoint(double _targetY) { //takes in two points, x and y, that are relative to the limelight target / wall. returns the angle that the robot needs to hold, relative to the wall.
         //an angle of 0 is strait at the target, while 90 is all the way
         double currentX = xOffset;
         double currentY = yOffset;
         double targetX = 0; //on the line out
-        double targetY = _targetY;
 
         double deltaX = targetX - currentX; //get the difference in x values;
-        double deltaY = Math.abs(targetY - currentY); //get the difference in y values;
+        double deltaY = Math.abs(_targetY - currentY); //get the difference in y values;
 
         System.out.println("Slope is equal too: " + (deltaY/deltaX));
-        System.out.println("TargetY = " + targetY);
+        System.out.println("TargetY = " + _targetY);
 
         double radians = Math.atan2(deltaX,deltaY); //uses tangent to get angle.
         return Math.toDegrees(radians); //returns angle in radians.
@@ -188,15 +204,22 @@ public class manueverinator {
             System.out.println("!!! ERROR !!! NO TARGET FOUND");
             return;
         }
+        getYaw = relativize(navx.getYaw());  //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
+
         update3dPoints();//acquire points, aka xoffset and y offset.
         System.out.println("X of 3D: " + xOffset + " Y of 3D: " + yOffset);
         double angleOffset = findAngle(xOffset,yOffset); //get the angle we need.
-        double currentAngle = navx.getYaw(); //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
-        System.out.println("Current Angle: " + currentAngle + "Target Angle: " + angleOffset); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
-        double turnOffset = getTurnValue(currentAngle, angleOffset);
+        System.out.println("Current Angle: " + getYaw + "Target Angle: " + angleOffset); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
+        double turnOffset = getTurnValue(getYaw, angleOffset);
         System.out.println("Wheel offsets: " + turnOffset);
         //Robot.dt.drive(turnOffset, followingTrackSpeed,0.30); //drive baby
 
+    }
+
+    private float relativize(float yaw) {
+        //this function needs to change the frame of the current position to the way we are looking at the wall. To start, we will line it up with the wall to get a good reference.
+        // in a real game we will need it to dynamically detect where it is lining up to.
+        return yaw;
     }
 
 }
