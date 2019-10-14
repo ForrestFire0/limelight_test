@@ -224,8 +224,9 @@ public class manueverinator {
     }
 
     private double locateTargetPoint() { //this finds the y value that we need to look at.
-        return 24; //returning 2 feet out at the moment. Once we get better at following things then we can
+        return 50; //returning 2 feet out at the moment. Once we get better at following things then we can
         //return 2*yOffset/3 which will give us a nice curve.
+        //Also note that this is the center of the robot, not the front of the robot. Add the relativeLLy to get the distance to the front of the robot.
     }
 
     private double getTurnValue(double currentAngle, double wantedAngle) { //positive turn right.
@@ -242,7 +243,7 @@ public class manueverinator {
 
         getYaw = relativize(navx.getYaw());  //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
 
-        update3dPoints();//acquire new points, aka xoffset and y offset.
+        update3dPoints();//acquire new points, aka xOffset and yOffset. Adjust them to be robot center oriented.
 
         System.out.println("X of 3D: " + xOffset + " Y of 3D: " + yOffset);
 
@@ -261,7 +262,14 @@ public class manueverinator {
              System.out.println("Wheel offsets: " + turnOffset);
              //Robot.dt.drive(turnOffset, 0 ,0.30); //drive baby... y is zero because this should just line up the thingy not go forward yet.
          }
+
+         /* Note: The last phase of this 'follow curve' function is unwritten. It lines up, and rotates toward the wall, but then doesn't move forward finally. This final step
+            depends on the form of the robot. What do we have to do? Move flush against the wall? Do we have a sonar to get the right distance?
+          */
     }
+
+
+
 
     private float relativize(float yaw) {
         //this function needs to change the frame of the current position to the way we are looking at the wall. To start, we will line it up with the wall to get a good reference.
