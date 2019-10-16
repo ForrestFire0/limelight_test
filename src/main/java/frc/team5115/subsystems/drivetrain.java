@@ -37,6 +37,19 @@ public class drivetrain {
         backRight.set(ControlMode.PercentOutput, rightSpd);
     }
 
+    public void drive(double x, double y) { //Change the drive output
+        //called lots of times per seconds.
+        x *= -1;
+
+        double leftSpd = (y + x);
+        double rightSpd = (y - x);
+        //set the outputs. let the magic occur
+        frontLeft.set(ControlMode.PercentOutput, leftSpd);
+        backLeft.set(ControlMode.PercentOutput, leftSpd);
+        frontRight.set(ControlMode.PercentOutput, rightSpd);
+        backRight.set(ControlMode.PercentOutput, rightSpd);
+    }
+
     public void resetEncoders() { //no idea when this is called if ever
         //necessary for magic to occur.
         frontLeft.set(ControlMode.PercentOutput, 0);

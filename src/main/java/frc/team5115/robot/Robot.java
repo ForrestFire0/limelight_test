@@ -1,6 +1,5 @@
 package frc.team5115.robot;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 
@@ -19,7 +18,8 @@ public class Robot extends TimedRobot {
 
     public void teleopPeriodic() {
         if(joy.getRawButton(8)) {
-            manueverinatorinator.followCurve(); //follow to the thingy.
+            System.out.println("------------------");
+            manueverinatorinator.lineUp(); //follow to the thingy.
         }
         else {
             dt.drive(joy.getRawAxis(1), joy.getRawAxis(0), 0.35); //change thrott with 1-j.getRawAxis(3)

@@ -4,6 +4,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SerialPort;
 import frc.team5115.robot.Robot;
 
@@ -18,18 +19,14 @@ public class manueverinator {
     private NetworkTableEntry camtran;
     private NetworkTableEntry LED;
     private NetworkTableEntry CAM;
-    private NetworkTableEntry pipeline;
-
     // Variables needed in calculation(s) -> All are static because thats what limelight wants ¯\_(ツ)_/¯
-    double camera_height = 0; // The height of camera (fixed)
-    double target_height = 10; // Height of level 1 targets (fixed) MUST BE UPDATED
-    double camera_angle = 0; // Angle of inclination of limelight with respect to ground.
-    double angle_sum;
+
     private double xOffset; // The horizontal shift the robot needs to make in order to align. FROM THE CENTER OF THE ROBOT.
     private double yOffset; // The vertical shift the robot needs to make in order to align. FROM THE CENTER OF THE ROBOT
     public double hypotenuse; // Pythagorean of x-off and y-off
     private AHRS navx; //turn baby.
     private float getYaw;
+    private double yawFromLL;
 
     /* *
     *   update camera height
@@ -39,8 +36,7 @@ public class manueverinator {
 
     private double Kp = 0.2; //a modifier to the aim function.
     private double deadZoneDegrees = 5;
-    private double turnKd = 0.02;
-    private double followingTrackSpeed = 0.3;
+    private double followingTrackSpeed = 0.15;
 
     // Load in the network tables
     public manueverinator(){
@@ -51,9 +47,8 @@ public class manueverinator {
         camtran = limelight.getEntry("camtran"); //Raw 3d positioning
         LED = limelight.getEntry("ledMode");
         CAM = limelight.getEntry("camMode");
-        pipeline = limelight.getEntry("pipeline");
 
-        navx = new AHRS(SerialPort.Port.kMXP);
+        navx = new AHRS(SPI.Port.kMXP);
         navx.reset(); //reset to the start orientation
     }
 
@@ -125,33 +120,31 @@ public class manueverinator {
     }
 
     private void update3dPoints() {
-        //System.out.println("Rejoice! 3D numbers are apon us!");
         double[] _3dStuff = camtran.getDoubleArray(new double[] {0, 0, 0, 0, 0, 0});
-        //System.out.println("X value" + _3dStuff[0]);
-        //System.out.println("1st Y value: " + _3dStuff[1]);
-        //System.out.println("2nd Y value: " + _3dStuff[2]);
+
         xOffset = _3dStuff[0];
         yOffset = _3dStuff[2];
+        yawFromLL = _3dStuff[5];
 
         //The following turns adjusts the x and y values from the limelight to get the
 
         final double relativeLLx = 0; //Positive value means the limelight is to the right of the center, while negative is to the left.
-        final double relativeLLy = -20; //negative 20 means that the robot location is 20 inches. behind the limelight.
+        final double relativeLLy = 13; //negative 20 means that the robot location is 20 inches. behind the limelight.
 
-        System.out.print("X=" + xOffset + " - " +
-                relativeLLx*cos(getYaw) + " - " +
-                relativeLLy*sin(getYaw));
+        //System.out.print("X=" + xOffset + " - " +
+         //       relativeLLx*cos(getYaw) + " - " +
+         //       relativeLLy*sin(getYaw));
 
         xOffset = xOffset - (relativeLLx*cos(getYaw)) - (relativeLLy*sin(getYaw));
-        System.out.println(" = " + xOffset);
+        //System.out.println(" = " + xOffset);
 
 
-        System.out.print("Y=" + yOffset + " - " +
-                relativeLLy*cos(getYaw) + " - " +
-                relativeLLx*sin(getYaw));
+        //System.out.print("Y=" + yOffset + " - " +
+        //        relativeLLy*cos(getYaw) + " - " +
+         //       relativeLLx*sin(getYaw));
 
         yOffset = yOffset - (relativeLLy*cos(getYaw)) - (relativeLLx*sin(getYaw));
-        System.out.println(" = " + yOffset);
+        //System.out.println(" = " + yOffset);
 
     }
 
@@ -165,16 +158,16 @@ public class manueverinator {
 
     /**
      * angle the angle the robot needs to hold.
-     * @param isTargetNotWall is the target away from the wall or not?
+     * @param calcTarget is the target away from the wall or not?
      */
 
 
-    private double findAngle(boolean isTargetNotWall) {
+    private double findAngle(boolean calcTarget) {
         double targetY;
-        if (isTargetNotWall) { //target y is a point away from the wall. (Currently set at 24 inches away from the wall.
+        if (calcTarget) { //target y is a point away from the wall. (Currently set at 20 inches away from the wall.
             targetY = locateTargetPoint();
-        } else { //target y is the wall, so 0. Point at 0.
-            targetY = 0;
+        } else { //target y is the wall, so 0. Point at 13 to account for the robot motion.
+            targetY = 13;
         }
         double angle = getAngleFromTargetPoint(targetY);
         return safeAngle(angle);
@@ -186,7 +179,6 @@ public class manueverinator {
         //getYaw: The current angle held RTF.
         //currentOffset: where the target is in the cameras vision. NOT RTF.
         double currentOffset = tx.getDouble(0);
-        getYaw = 10;
         double degreesLeft = 30 - Math.abs(currentOffset);//the amount of degrees we can move before we go off the field, ABS.
         //System.out.println("There are " + degreesLeft + " degrees left before the camera looses sight.");
 
@@ -207,35 +199,41 @@ public class manueverinator {
     }
 
 
-    private double getAngleFromTargetPoint(double _targetY) { //takes in two points, x and y, that are relative to the limelight target / wall. returns the angle that the robot needs to hold, relative to the wall.
+    private double getAngleFromTargetPoint(double targetY) { //takes in two points, x and y, that are relative to the limelight target / wall. returns the angle that the robot needs to hold, relative to the wall.
         //an angle of 0 is strait at the target, while 90 is all the way
         double currentX = xOffset;
         double currentY = yOffset;
         double targetX = 0; //on the line out
 
+        System.out.print("X: " + (int) targetX + " - " + (int) currentX + " = ");
         double deltaX = targetX - currentX; //get the difference in x values;
-        double deltaY = Math.abs(_targetY - currentY); //get the difference in y values;
-
-        System.out.println("Slope is equal too: " + (deltaY/deltaX));
-        System.out.println("TargetY = " + _targetY);
+        System.out.println((int)deltaX + " = deltaX");
+        System.out.print(" Y: " + (int) targetY + " - " + (int) currentY + " = ");
+        double deltaY = Math.abs(targetY - currentY); //get the difference in y values;
+        System.out.println((int)deltaY);
 
         double radians = Math.atan2(deltaX,deltaY); //uses tangent to get angle.
         return Math.toDegrees(radians); //returns angle in radians.
     }
 
     private double locateTargetPoint() { //this finds the y value that we need to look at.
-        return 50; //returning 2 feet out at the moment. Once we get better at following things then we can
+        return -33; //returning 2 feet out from wall to the limelight at the moment. Once we get better at following things then we can
         //return 2*yOffset/3 which will give us a nice curve.
         //Also note that this is the center of the robot, not the front of the robot. Add the relativeLLy to get the distance to the front of the robot.
     }
 
     private double getTurnValue(double currentAngle, double wantedAngle) { //positive turn right.
-        double turnOffset;
-        turnOffset = turnKd * (wantedAngle - currentAngle);
+        double turnKd = 0.02;
+        double turnOffset = turnKd * (wantedAngle - currentAngle);
+        turnOffset = limit(turnOffset, 0.5,-0.5); //limits it to be actually reasonable.
         return turnOffset; // the 0-1 value that we get based on the angle offset.
     }
 
-    public void followCurve() {
+    private double limit(double num, double min, double max) {
+        return Math.min(Math.max(max,num), min);
+    }
+
+    public void lineUp() {
         if(tv.getDouble(0) == 0) { //no target found.
             System.out.println("!!! ERROR !!! NO TARGET FOUND");
             return;
@@ -245,29 +243,37 @@ public class manueverinator {
 
         update3dPoints();//acquire new points, aka xOffset and yOffset. Adjust them to be robot center oriented.
 
-        System.out.println("X of 3D: " + xOffset + " Y of 3D: " + yOffset);
 
-         if (yOffset > 30 || xOffset > 3) { //if we are faw or our offset is off by a lot.
-             double angleOffset = findAngle(true); //get the angle we need.
-             System.out.println("Current Angle: " + getYaw + "Target Angle: " + angleOffset); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
 
-             double turnOffset = getTurnValue(getYaw, angleOffset);
+        System.out.println("X: " + (int) xOffset + " Y: " + (int) yOffset + " Angle: " + (int) getYaw + " LL_Angle: " + (int) yawFromLL);
+
+         if (yOffset < -30 || Math.abs(xOffset) > 3) { //if we are faw or our offset is off by a lot.
+             double targetAngle = findAngle(true); //get the angle we need. RELATIVE TO WALL
+             System.out.println("Stage 1 (On path)");
+             System.out.println("Current Angle: " + getYaw + "Target Angle: " + targetAngle); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
+
+             double turnOffset = getTurnValue(getYaw, targetAngle);
              System.out.println("Wheel offsets: " + turnOffset);
-             //Robot.dt.drive(turnOffset, followingTrackSpeed,0.30); //drive toward the angle.
+             Robot.dt.drive(0, turnOffset); //drive toward the angle.
          } else {
+
+             System.out.println("Not running. " + yOffset + " < -30? or abs(" + xOffset + ") > 3");
+
+             /*
              double angleOffset = findAngle(false); //get the angle we need.
-             System.out.println("Current Angle: " + getYaw + "Target Angle: " + angleOffset); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
+             System.out.println("Stage 2 (Rotation)");
+             System.out.println("Current Angle: " + getYaw + "Angle Offset: " + angleOffset); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
 
              double turnOffset = getTurnValue(getYaw, angleOffset);
              System.out.println("Wheel offsets: " + turnOffset);
-             //Robot.dt.drive(turnOffset, 0 ,0.30); //drive baby... y is zero because this should just line up the thingy not go forward yet.
+             Robot.dt.drive(turnOffset, 0 ,0.15); //drive baby... y is zero because this should just line up the thingy not go forward yet.
+             */
          }
 
          /* Note: The last phase of this 'follow curve' function is unwritten. It lines up, and rotates toward the wall, but then doesn't move forward finally. This final step
             depends on the form of the robot. What do we have to do? Move flush against the wall? Do we have a sonar to get the right distance?
           */
     }
-
 
 
 
