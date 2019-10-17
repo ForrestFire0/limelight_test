@@ -7,12 +7,12 @@ import frc.team5115.subsystems.*;
 
 public class Robot extends TimedRobot {
     public static Joystick joy;
-    public static drivetrain dt;
+    public static Drivetrain dt;
     public static manueverinator manueverinatorinator;
 
     public void robotInit() {
         joy = new Joystick(0);
-        dt = new drivetrain();
+        dt = new Drivetrain();
         manueverinatorinator = new manueverinator();
     }
 
@@ -22,12 +22,13 @@ public class Robot extends TimedRobot {
             manueverinatorinator.lineUp(); //follow to the thingy.
         }
         else {
-            dt.drive(joy.getRawAxis(1), joy.getRawAxis(0), 0.35); //change thrott with 1-j.getRawAxis(3)
+            dt.RBW(joy.getRawAxis(0)); //Drive by wire based on the angle.
         }
 
         if(joy.getRawButton(9)) { //press this button to calibrate.
             manueverinatorinator.navxAngleReset(); //if the button is pressed reset the navx angle. Do this when relative to the wall.
         }
+
     }
 }
 
