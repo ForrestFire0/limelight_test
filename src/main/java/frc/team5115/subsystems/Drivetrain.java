@@ -58,7 +58,7 @@ public class Drivetrain {
         this.drive(P+D,y/3.5,1);
     }
 
-    void angleHold(double currentAngle, double targetAngle) {
+    void angleHold(double currentAngle, double targetAngle) { //Overridden magic.
         this.angleHold(currentAngle, targetAngle, 0);
     }
 

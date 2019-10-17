@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 
 import frc.team5115.subsystems.*;
-
+//todome make the navx a robot variable, not a manuverinator file.
 public class Robot extends TimedRobot {
     public static Joystick joy;
     public static Drivetrain dt;

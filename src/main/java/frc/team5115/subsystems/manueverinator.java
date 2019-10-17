@@ -11,7 +11,6 @@ import frc.team5115.robot.Robot;
 
 public class manueverinator {
 
-    NetworkTable limelight;
     private static NetworkTableEntry tx; // Measure of X offset angle
     private static NetworkTableEntry ty; // Measure of Y offset angle
     private NetworkTableEntry tv;
@@ -23,7 +22,7 @@ public class manueverinator {
 
     private double xOffset; // The horizontal shift the robot needs to make in order to align. FROM THE CENTER OF THE ROBOT.
     private double yOffset; // The vertical shift the robot needs to make in order to align. FROM THE CENTER OF THE ROBOT
-    public double hypotenuse; // Pythagorean of x-off and y-off
+
     private AHRS navx; //turn baby.
     private float getYaw;
 
@@ -42,7 +41,7 @@ public class manueverinator {
 
     // Load in the network tables
     public manueverinator(){
-        limelight = NetworkTableInstance.getDefault().getTable("limelight");
+        NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight");
         tx = limelight.getEntry("tx"); //Angle in x of degrees
         ty = limelight.getEntry("ty"); //Angle in y of degrees
         tv = limelight.getEntry("tv"); //have target?
@@ -110,9 +109,13 @@ public class manueverinator {
 
         if (_3dStuff[2] > 1) { //values dont make sense. The y offset should be negative but its not, which means that it is doo doo info.
             //calculate values from navx and other things.
+            final double targetHeight = 36; //is it 36 inches???
+            final double cameraHieght = 4; //update but it probably doesnt matter.
+            final double cameraAngle = 20; //update
+            double hypotenuse =  (targetHeight-cameraHieght)/Math.tan(ty.getDouble(0) + cameraAngle); //
             double yaw = getYaw + tx.getDouble(0); //angle from the wall. Remember: negative is pointing to left, positive is to the right.
-            xOffset = -sin(yaw);
-            yOffset = cos(yaw);
+            xOffset = -sin(yaw) * hypotenuse;
+            yOffset = cos(yaw) * hypotenuse;
         } else {
             //get values from the 3d pnp.
             xOffset = _3dStuff[0];
@@ -212,7 +215,6 @@ public class manueverinator {
         return -limit(yOffset/2, 30,200); //which will give us a nice curve.
         //Also note that this is the center of the robot, not the front of the robot. Add the relativeLLy to get the distance to the front of the robot.
     }
-
 
     private double limit(double num, double min, double max) {
         return Math.min(Math.max(max,num), min);
