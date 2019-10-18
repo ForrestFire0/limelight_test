@@ -15,8 +15,6 @@ public class manueverinator {
     private static NetworkTableEntry ty; // Measure of Y offset angle
     private NetworkTableEntry tv;
     private NetworkTableEntry camtran;
-    private NetworkTableEntry LED;
-    private NetworkTableEntry CAM;
 
     // Variables needed in calculation(s) -> All are static because thats what limelight wants ¯\_(ツ)_/¯
 
@@ -25,15 +23,7 @@ public class manueverinator {
 
     private AHRS navx; //turn baby.
     private float getYaw;
-
     private double[] emptyDoubleArray = new double[6];
-
-    private int ticksSinceTargetSeen;
-    /* *
-    *   update camera height
-    *   update target height
-    *   update camera angle
-     */
 
     private final double Kp = 0.2; //a modifier to the aim function.
     private final double deadZoneDegrees = 5;
@@ -46,8 +36,6 @@ public class manueverinator {
         ty = limelight.getEntry("ty"); //Angle in y of degrees
         tv = limelight.getEntry("tv"); //have target?
         camtran = limelight.getEntry("camtran"); //Raw 3d positioning
-        LED = limelight.getEntry("ledMode");
-        CAM = limelight.getEntry("camMode");
 
         navx = new AHRS(SPI.Port.kMXP);
         navx.reset(); //reset to the start orientation
@@ -127,7 +115,7 @@ public class manueverinator {
         //The following turns adjusts the x and y values from the limelight to get the
 
         final double relativeLLx = 0; //Positive value means the limelight is to the right of the center, while negative is to the left.
-        final double relativeLLy = 13; //negative 20 means that the robot location is 20 inches. behind the limelight.
+        final double relativeLLy = -13; //negative 20 means that the robot location is 20 inches. behind the limelight.
 
         //System.out.print("X=" + xOffset + " - " +
          //       relativeLLx*cos(getYaw) + " - " +
@@ -153,11 +141,6 @@ public class manueverinator {
     private double cos(double n) {
         return Math.cos(Math.toRadians(n));
     }
-
-    /**
-     * angle the angle the robot needs to hold.
-     *
-     */
 
 
     private double findAngle() {
