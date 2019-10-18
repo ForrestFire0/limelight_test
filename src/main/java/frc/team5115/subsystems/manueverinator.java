@@ -223,7 +223,7 @@ public class manueverinator {
         System.out.println("X: " + (int) xOffset + " Y: " + (int) yOffset + " Angle: " + (int) getYaw);
 
         double targetAngle = findAngle(); //get the angle we need. RELATIVE TO WALL
-        System.out.println("Current Angle: " + getYaw + "Target Angle: " + targetAngle); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
+
         System.out.println("getYaw: " + (int) getYaw + " targetAngle: " + (int) targetAngle);
         //Robot.dt.angleHold(getYaw,targetAngle);
 
