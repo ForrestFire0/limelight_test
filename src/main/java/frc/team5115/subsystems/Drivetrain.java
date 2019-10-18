@@ -25,12 +25,12 @@ public class Drivetrain {
         backRight.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
     }
 
-    public void drive(double x, double y, double throttle) { //Change the drive output
+    public void drive(double y, double x, double throttle) { //Change the drive output
         //called lots of times per seconds.
-        x *= -1;
+        y *= -1;
 
-        double leftSpd = (y + x) * throttle;
-        double rightSpd = (y - x) * throttle;
+        double leftSpd = (x + y) * throttle;
+        double rightSpd = (x - y) * throttle;
         //set the outputs. let the magic occur
         frontLeft.set(ControlMode.PercentOutput, leftSpd);
         backLeft.set(ControlMode.PercentOutput, leftSpd);
@@ -49,23 +49,21 @@ public class Drivetrain {
 
     void angleHold(double currentAngle, double targetAngle, double y) {
 
-        double kP = 0.05;
-        double kD = 0.05;
+        double kP = 0.02;
+        //double kD = 0.01;
 
         double P = kP*(targetAngle - currentAngle);
-        double D = kD*((currentAngle - lastAngle)/0.02); //finds the difference in the last tick.
-        System.out.println("PID Stuff: P:" + P + " D: " + D);
-        this.drive(P+D,y/3.5,1);
+        //double D = kD*((currentAngle - lastAngle)/0.02); //finds the difference in the last tick.
+        this.drive(y,P,1);
     }
 
     void angleHold(double currentAngle, double targetAngle) { //Overridden magic.
         this.angleHold(currentAngle, targetAngle, 0);
     }
 
-    public void RBW(double x) { //rotate by wire
+    public void RBW(double x, double y) { //rotate by wire
         double currentAngle = Robot.manueverinatorinator.getGetYaw();
-        targetAngle += x; //at 50 ticks a second, this is 50 degrees a second because the max x is 1.
-        System.out.println("Target Angle: " + (int) targetAngle + " Current Angle" + (int) currentAngle);
-        angleHold(currentAngle, targetAngle);
+        targetAngle += x*1.5; //at 50 ticks a second, this is 50 degrees a second because the max x is 1.
+        angleHold(currentAngle, targetAngle, y);
     }
 }

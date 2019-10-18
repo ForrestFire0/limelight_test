@@ -22,7 +22,7 @@ public class Robot extends TimedRobot {
             manueverinatorinator.lineUp(); //follow to the thingy.
         }
         else {
-            dt.RBW(joy.getRawAxis(0)); //Drive by wire based on the angle.
+            dt.RBW(joy.getRawAxis(0), joy.getRawAxis(1)); //Drive by wire based on the angle.
         }
 
         if(joy.getRawButton(9)) { //press this button to calibrate.

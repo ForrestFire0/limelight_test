@@ -107,17 +107,20 @@ public class manueverinator {
     private void update3dPoints() {
         double[] _3dStuff = camtran.getDoubleArray(emptyDoubleArray);
 
-        if (_3dStuff[2] > 1) { //values dont make sense. The y offset should be negative but its not, which means that it is doo doo info.
+        if (_3dStuff[2] < 5) { //values dont make sense. The y offset should be negative but its not, which means that it is doo doo info.
             //calculate values from navx and other things.
             final double targetHeight = 36; //is it 36 inches???
-            final double cameraHieght = 4; //update but it probably doesnt matter.
+            final double cameraHieght = 8; //update but it probably doesnt matter.
             final double cameraAngle = 20; //update
-            double hypotenuse =  (targetHeight-cameraHieght)/Math.tan(ty.getDouble(0) + cameraAngle); //
+            double hypotenuse =  (targetHeight-cameraHieght)/Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)); //
+            System.out.print(targetHeight-cameraAngle);
+            System.out.print("/" + Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)));
             double yaw = getYaw + tx.getDouble(0); //angle from the wall. Remember: negative is pointing to left, positive is to the right.
             xOffset = -sin(yaw) * hypotenuse;
             yOffset = cos(yaw) * hypotenuse;
         } else {
             //get values from the 3d pnp.
+            System.out.println("Using limelight pnp");
             xOffset = _3dStuff[0];
             yOffset = _3dStuff[2];
         }
@@ -167,7 +170,8 @@ public class manueverinator {
         return safeAngle(angle);
     }
 
-    private double safeAngle(double angleRequested) { //given the angle requested, the change we need to make, and how much more we can turn without it going off the screen, return the maximun angle we can turn, given that it is NOT safe.
+    private double safeAngle(double angleRequested) {
+        //given the angle requested, the change we need to make, and how much more we can turn without it going off the screen, return the maximun angle we can turn, given that it is NOT safe.
         //THIS IS LIKE 99% working. I tested a crap ton on codeHS.
         //angleRequested: The new angle we want to hold, RTF (relative to field).
         //getYaw: The current angle held RTF.
@@ -193,7 +197,8 @@ public class manueverinator {
     }
 
 
-    private double getAngleFromTargetPoint(double targetY) { //takes in two points, x and y, that are relative to the limelight target / wall. returns the angle that the robot needs to hold, relative to the wall.
+    private double getAngleFromTargetPoint(double targetY) {
+        //takes in two points, x and y, that are relative to the limelight target / wall. returns the angle that the robot needs to hold, relative to the wall.
         //an angle of 0 is strait at the target, while 90 is all the way
         double currentX = xOffset;
         double currentY = yOffset;
@@ -210,7 +215,8 @@ public class manueverinator {
         return Math.toDegrees(radians); //returns angle in radians.
     }
 
-    private double locateTargetPoint() { //this finds the y value that we need to look at.
+    private double locateTargetPoint() {
+        //this finds the y value that we need to look at.
         //return -40; //returning 2 feet out from wall to the limelight at the moment. Once we get better at following things then we can
         return -limit(yOffset/2, 30,200); //which will give us a nice curve.
         //Also note that this is the center of the robot, not the front of the robot. Add the relativeLLy to get the distance to the front of the robot.
@@ -235,8 +241,8 @@ public class manueverinator {
 
         double targetAngle = findAngle(); //get the angle we need. RELATIVE TO WALL
         System.out.println("Current Angle: " + getYaw + "Target Angle: " + targetAngle); //this returns the angle relative to the wall. 0 is strait at the wall, while 90 is completely right and -90 is completely left.
-
-        Robot.dt.angleHold(getYaw,targetAngle);
+        System.out.println("getYaw: " + (int) getYaw + " targetAngle: " + (int) targetAngle);
+        //Robot.dt.angleHold(getYaw,targetAngle);
 
          /* Note: The last phase of this 'follow curve' function is unwritten. It lines up, and rotates toward the wall, but then doesn't move forward finally. This final step
             depends on the form of the robot. What do we have to do? Move flush against the wall? Do we have a sonar to get the right distance?
@@ -249,8 +255,8 @@ public class manueverinator {
         return yaw;
     }
 
-    float getGetYaw() {
-        return navx.getYaw();
+    double getGetYaw() {
+        return navx.getAngle();
     }
 }
 
