@@ -97,15 +97,16 @@ public class manueverinator {
 
         if (_3dStuff[2] < 5) { //values dont make sense. The y offset should be negative but its not, which means that it is doo doo info.
             //calculate values from navx and other things.
+            System.out.println("Using Math");
             final double targetHeight = 36; //is it 36 inches???
             final double cameraHieght = 8; //update but it probably doesnt matter.
-            final double cameraAngle = 20; //update
+            final double cameraAngle = 25; //update
             double hypotenuse =  (targetHeight-cameraHieght)/Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)); //
-            System.out.print(targetHeight-cameraAngle);
-            System.out.print("/" + Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)));
+            //System.out.println(ty.getDouble(0) + cameraAngle + " = angle");
+            //System.out.print("/" + Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)));
             double yaw = getYaw + tx.getDouble(0); //angle from the wall. Remember: negative is pointing to left, positive is to the right.
             xOffset = -sin(yaw) * hypotenuse;
-            yOffset = cos(yaw) * hypotenuse;
+            yOffset = -cos(yaw) * hypotenuse;
         } else {
             //get values from the 3d pnp.
             System.out.println("Using limelight pnp");
@@ -144,12 +145,14 @@ public class manueverinator {
 
 
     private double findAngle() {
-        if (yOffset < -40) { //We are close to the wall, so no matter making it anything but the goal point.
+        if (yOffset < -30) { //We are close to the wall, so no matter making it anything but the goal point.
             return 0;
         }
         //else
         double targetY = locateTargetPoint();
+        System.out.println("TargetY: " + targetY);
         double angle = getAngleFromTargetPoint(targetY);
+
         return safeAngle(angle);
     }
 
@@ -187,12 +190,13 @@ public class manueverinator {
         double currentY = yOffset;
         double targetX = 0; //on the line out
 
-        System.out.print("X: " + (int) targetX + " - " + (int) currentX + " = ");
         double deltaX = targetX - currentX; //get the difference in x values;
+        System.out.print("TgtX: " + (int) targetX + " - CurrntX: " + (int) currentX + " = ");
         System.out.println((int)deltaX + " = deltaX");
-        System.out.print(" Y: " + (int) targetY + " - " + (int) currentY + " = ");
+
         double deltaY = Math.abs(targetY - currentY); //get the difference in y values;
-        System.out.println((int)deltaY);
+        System.out.print("TgtY " + (int) targetY + " - CurrntY" + (int) currentY + " = ");
+        System.out.println((int)deltaY + " = deltaY");
 
         double radians = Math.atan2(deltaX,deltaY); //uses tangent to get angle.
         return Math.toDegrees(radians); //returns angle in radians.
@@ -201,13 +205,10 @@ public class manueverinator {
     private double locateTargetPoint() {
         //this finds the y value that we need to look at.
         //return -40; //returning 2 feet out from wall to the limelight at the moment. Once we get better at following things then we can
-        return -limit(yOffset/2, 30,200); //which will give us a nice curve.
+        return Math.min(2*yOffset/3, -30); //takes the smaller of the two values. Once the calculated target point is further forward than -30, the program designateds -30 as the target location.
         //Also note that this is the center of the robot, not the front of the robot. Add the relativeLLy to get the distance to the front of the robot.
     }
 
-    private double limit(double num, double min, double max) {
-        return Math.min(Math.max(max,num), min);
-    }
 
     public void lineUp() {
         if(tv.getDouble(0) == 0) { //no target found.
@@ -224,12 +225,9 @@ public class manueverinator {
 
         double targetAngle = findAngle(); //get the angle we need. RELATIVE TO WALL
 
-        System.out.println("getYaw: " + (int) getYaw + " targetAngle: " + (int) targetAngle);
+        System.out.println("targetAngle: " + (int) targetAngle);
         //Robot.dt.angleHold(getYaw,targetAngle);
 
-         /* Note: The last phase of this 'follow curve' function is unwritten. It lines up, and rotates toward the wall, but then doesn't move forward finally. This final step
-            depends on the form of the robot. What do we have to do? Move flush against the wall? Do we have a sonar to get the right distance?
-          */
     }
 
     private float relativize(float yaw) {

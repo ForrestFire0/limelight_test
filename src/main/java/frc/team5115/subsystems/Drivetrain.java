@@ -10,7 +10,6 @@ public class Drivetrain {
     private TalonSRX frontRight;
     private TalonSRX backLeft;
     private TalonSRX backRight;
-    private double lastAngle;
     private double targetAngle;
     /*
     private Encoder leftEncoder;
@@ -21,7 +20,7 @@ public class Drivetrain {
         frontRight = new TalonSRX(2);
         backLeft = new TalonSRX(3);
         backRight = new TalonSRX(4);
-        // Magic
+
         frontLeft.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
         frontRight.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
         backLeft.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
@@ -61,7 +60,7 @@ public class Drivetrain {
     void angleHold(double currentAngle, double targetAngle, double y) {
 
         double kP = 0.02;
-        //double kD = 0.01;
+        //double kD = 0.01; Hey if you are implementing a d part, use the navx.getRate
 
         double P = kP*(targetAngle - currentAngle);
         //double D = kD*((currentAngle - lastAngle)/0.02); //finds the difference in the last tick.
