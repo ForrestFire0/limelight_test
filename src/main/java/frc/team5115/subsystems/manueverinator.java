@@ -40,6 +40,8 @@ public class manueverinator {
         navx.reset(); //reset to the start orientation
     }
 
+
+
     public void navxAngleReset() {
         navx.reset(); //reset to the field orientation
         System.out.println("Angle has been reset.");
@@ -90,7 +92,6 @@ public class manueverinator {
         System.out.println("tv: " + tv.getDouble(0));
         //System.out.println(camtran);
     }
-
     private void update3dPoints() {
         double[] _3dStuff = camtran.getDoubleArray(emptyDoubleArray);
 
@@ -99,7 +100,7 @@ public class manueverinator {
             System.out.println("update3DPoints: Using Math");
             final double targetHeight = 36; //is it 36 inches???
             final double cameraHieght = 8; //update but it probably doesnt matter.
-            final double cameraAngle = 25; //update
+            final double cameraAngle = 23; //update
             double hypotenuse =  (targetHeight-cameraHieght)/Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)); //
             //System.out.println(ty.getDouble(0) + cameraAngle + " = angle");
             //System.out.print("/" + Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)));
@@ -144,7 +145,7 @@ public class manueverinator {
 
 
     private double findAngle() {
-        if (yOffset < -30) { //We are close to the wall, so no matter making it anything but the goal point.
+        if (yOffset > -30) { //We are close to the wall, so no matter making it anything but the goal point.
             return 0;
         }
         //else
@@ -226,8 +227,8 @@ public class manueverinator {
 
         System.out.println("main: targetAngle: " + (int) targetAngle);
 
-        double followingTrackSpeed = 0.3;
-        Robot.dt.angleHold(getYaw,targetAngle, followingTrackSpeed);
+        double followingTrackSpeed = -0.1;
+        Robot.dt.angleHold(getYaw,targetAngle,followingTrackSpeed);
     }
 
     private float relativize(float yaw) {

@@ -14,6 +14,8 @@ public class Robot extends TimedRobot {
         joy = new Joystick(0);
         dt = new Drivetrain();
         manueverinatorinator = new manueverinator();
+        manueverinatorinator.navxAngleReset(); //if the button is pressed reset the navx angle. Do this when relative to the wall.
+        dt.resetTargetAngle();
     }
 
     public void teleopPeriodic() {
@@ -27,6 +29,7 @@ public class Robot extends TimedRobot {
 
         if(joy.getRawButton(9)) { //press this button to calibrate.
             manueverinatorinator.navxAngleReset(); //if the button is pressed reset the navx angle. Do this when relative to the wall.
+            dt.resetTargetAngle();
         }
 
     }

@@ -57,8 +57,12 @@ public class Drivetrain {
         backRight.set(ControlMode.PercentOutput, 0);
     }
 
-    void angleHold(double currentAngle, double targetAngle, double y) {
+    public void resetTargetAngle() {
+        targetAngle = 0;
+    }
 
+    void angleHold(double currentAngle, double targetAngle, double y) {
+        this.targetAngle = targetAngle;
         double kP = 0.02;
         //double kD = 0.01; Hey if you are implementing a d part, use the navx.getRate
 
