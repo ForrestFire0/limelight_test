@@ -30,6 +30,13 @@ public class Robot extends TimedRobot {
         }
 
     }
+
+    @Override
+    public void disabledInit() {
+        System.out.println("Disabled.");
+        dt.drive(0,0,0);
+    }
+
 }
 
 /**
