@@ -40,6 +40,12 @@ public class Robot extends TimedRobot {
         dt.drive(0,0,0);
     }
 
+    @Override
+    public void teleopInit() {
+        System.out.println("Starting! Reset dt Target Angle");
+        dt.resetTargetAngle();
+    }
+
 }
 
 /**

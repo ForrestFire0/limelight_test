@@ -57,8 +57,9 @@ public class Drivetrain {
         backRight.set(ControlMode.PercentOutput, 0);
     }
 
-    public void resetTargetAngle() {
-        targetAngle = 0;
+    public void resetTargetAngle() { //set the current target angle to where we currently are.
+        targetAngle = Robot.manueverinatorinator.getGetYaw();
+        System.out.println("RESET RBW: Target Angle: " + targetAngle + " Current Angle: " + Robot.manueverinatorinator.getGetYaw());
     }
 
     void angleHold(double currentAngle, double targetAngle, double y) {
