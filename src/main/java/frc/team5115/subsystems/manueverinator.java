@@ -207,12 +207,12 @@ public class manueverinator {
         Robot.dt.angleHold(getYaw, targetAngle, followingTrackSpeed);
     }
 
-    /**
-     * @return throttle
-     */
     private double calcFollowingCalcSpeed() {
-        int distance = 70;
-        return Math.max(1, (yOffset/distance) + 0.1); //add 0.1 in order to ensure we always keep moving.
+        int distance = 100; //The distance where the slowing begins.
+        double max = 0.5;   //The distance maximum motor values.
+
+        distance = (int) (distance * (1 / max));
+        return Math.min(max, (yOffset/distance) + 0.1); //add 0.1 in order to ensure we always keep moving.
     }
 
     private float relativize(int yaw) { //this assumes two targets, one looking at 0 and 180.
@@ -221,9 +221,6 @@ public class manueverinator {
         if (leftOver<-90) {
             leftOver += 180;
         }
-
-
-
 
         return leftOver;
     }
@@ -238,3 +235,7 @@ public class manueverinator {
 }
 
 
+/** Things changed
+ * relativize added. Check functionality of relativize.
+ * Calc following speed added. Edit min and maxes to do things.
+*/
