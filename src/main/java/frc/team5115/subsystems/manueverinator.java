@@ -7,6 +7,8 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.SPI;
 import frc.team5115.robot.Robot;
 
+import javax.naming.spi.ObjectFactory;
+
 // Docs: http://docs.limelightvision.io/en/latest/networktables_api.html
 
 public class manueverinator {
@@ -60,25 +62,11 @@ public class manueverinator {
      * You can tell the drivers to look a little to the left of the target and then go right, therefore ensuring that the robot is at the correct angle of rotation.
      */
     public void aim() {
-
         if (tv.getDouble(0) == 1) {
-            double heading_error = -tx.getDouble(0); //how far off is it from the center of the screen
-            double steering_adjust = 0; //a var that is the processes value that is added and taken from each wheel.
-            if (Math.abs(heading_error) > deadZoneDegrees) //if it is an error greater than one (significant)
-            {
-                steering_adjust = Kp * heading_error;
-            } else {
-                steering_adjust = 0;
-            }
-
-            //Help discovering errors:
-            System.out.println("Heading Error: " + heading_error);
-            System.out.println("Steering Adjustment: " + steering_adjust);
-
-            Robot.dt.drive(0, -steering_adjust, 0.30); //drive baby
+            Robot.dt.angleHold(ty.getDouble(0), 0);
         } else {
             System.out.println("No target found. Stopping.");
-            //In the furure, maybe we should add a scanning function.
+            //In the future, maybe we should add a scanning function.
             Robot.dt.drive(0, 0, 0);
         }
     }
@@ -95,9 +83,9 @@ public class manueverinator {
         //calculate values from navx and other things.
         System.out.println("update3DPoints: Using Math");
         final double targetHeight = 36; //is it 36 inches???
-        final double cameraHieght = 8; //update but it probably doesnt matter.
+        final double cameraHeight = 8; //update but it probably doesnt matter.
         final double cameraAngle = 23; //update
-        double hypotenuse = (targetHeight - cameraHieght) / Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)); //
+        double hypotenuse = (targetHeight - cameraHeight) / Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)); //
         //System.out.println(ty.getDouble(0) + cameraAngle + " = angle");
         //System.out.print("/" + Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)));
         double yaw = getYaw + tx.getDouble(0); //angle from the wall. Remember: negative is pointing to left, positive is to the right.
@@ -205,7 +193,7 @@ public class manueverinator {
             return;
         }
 
-        getYaw = relativize(navx.getYaw());  //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
+        getYaw = relativize((int) navx.getYaw());  //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
 
         update3dPoints();//acquire new points, aka xOffset and yOffset. Adjust them to be robot center oriented.
 
@@ -215,16 +203,29 @@ public class manueverinator {
 
         System.out.println("main: targetAngle: " + (int) targetAngle);
 
-        double followingTrackSpeed = -0.3;
+        double followingTrackSpeed = calcFollowingCalcSpeed(); //NOT how far out we start linearly slowing... higher num = slowing more.
         Robot.dt.angleHold(getYaw, targetAngle, followingTrackSpeed);
     }
 
-    private float relativize(float yaw) {
-        //this function needs to change the frame of the current position to the way we are looking at the wall. To start, we will line it up with the wall to get a good reference.
-        // in a real game we will need it to dynamically detect where it is lining up to.
-        int rotations = (int) yaw % 180;
-        System.out.println("relativize: targeting " + rotations * 180 + " degrees.");
-        return yaw;
+    /**
+     * @return throttle
+     */
+    private double calcFollowingCalcSpeed() {
+        int distance = 70;
+        return Math.max(1, (yOffset/distance) + 0.1); //add 0.1 in order to ensure we always keep moving.
+    }
+
+    private float relativize(int yaw) { //this assumes two targets, one looking at 0 and 180.
+        int modYaw = yaw + 89;
+        int leftOver = (modYaw % 180) - 89;
+        if (leftOver<-90) {
+            leftOver += 180;
+        }
+
+
+
+
+        return leftOver;
     }
 
     double getGetYaw() {
@@ -235,4 +236,5 @@ public class manueverinator {
         System.out.println("Y Velocity" + navx.getVelocityY());
     }
 }
+
 
