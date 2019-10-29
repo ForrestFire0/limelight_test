@@ -16,7 +16,6 @@ public class manueverinator {
     private static NetworkTableEntry tx; // Measure of X offset angle
     private static NetworkTableEntry ty; // Measure of Y offset angle
     private NetworkTableEntry tv;
-    private NetworkTableEntry camtran;
 
     // Variables needed in calculation(s) -> All are static because thats what limelight wants ¯\_(ツ)_/¯
 
@@ -36,7 +35,6 @@ public class manueverinator {
         tx = limelight.getEntry("tx"); //Angle in x of degrees
         ty = limelight.getEntry("ty"); //Angle in y of degrees
         tv = limelight.getEntry("tv"); //have target?
-        camtran = limelight.getEntry("camtran"); //Raw 3d positioning
 
         navx = new AHRS(SPI.Port.kMXP);
         navx.reset(); //reset to the start orientation

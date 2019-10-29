@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 
 import frc.team5115.subsystems.*;
 //todome make the navx a robot variable, not a manuverinator file.
+//todome make a calibration method to move it to a certain distance and know the angle. Basically a calibration method for the angle of the limelight.
 public class Robot extends TimedRobot {
     public static Joystick joy;
     public static Drivetrain dt;
