@@ -26,6 +26,7 @@ public class Robot extends TimedRobot {
         }
         else {
             dt.RBW(joy.getRawAxis(0), joy.getRawAxis(1)); //Drive by wire based on the angle.
+            //dt.fakeMechanum(joy.getRawAxis(0), joy.getRawAxis(1));
         }
 
         if(joy.getRawButton(9)) { //press this button to calibrate.

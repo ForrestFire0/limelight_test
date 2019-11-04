@@ -11,6 +11,9 @@ import javax.naming.spi.ObjectFactory;
 
 // Docs: http://docs.limelightvision.io/en/latest/networktables_api.html
 
+/**
+ * The base class for all autonomous using the limelight.
+ */
 public class manueverinator {
 
     private static NetworkTableEntry tx; // Measure of X offset angle
@@ -29,6 +32,9 @@ public class manueverinator {
     private final double Kp = 0.2; //a modifier to the aim function.
     private final double deadZoneDegrees = 5;
 
+    /**
+     * Creates the limelight table entries.
+     */
     // Load in the network tables
     public manueverinator() {
         NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight");
@@ -41,6 +47,9 @@ public class manueverinator {
     }
 
 
+    /**
+     * resets the navx yaw value to 0. Relative to the current position of the robot.
+     */
     public void navxAngleReset() {
         navx.reset(); //reset to the field orientation
         System.out.println("Angle has been reset.");
@@ -48,6 +57,9 @@ public class manueverinator {
     }
 
     /**
+     * aims directly at the target.
+     */
+    /*
      * DEAR FUTURE FORREST: There are two possible applications for this program.
      * <p>
      * If you want to keep on working on tracking the target WHEN THE TARGET MOVES:
@@ -69,6 +81,9 @@ public class manueverinator {
         }
     }
 
+    /**
+     * prints tx, ty, tv.
+     */
     public void debug() {
         System.out.println("tx: " + tx.getDouble(0));
         System.out.println("ty: " + ty.getDouble(0));
@@ -128,9 +143,17 @@ public class manueverinator {
         System.out.println("findAngle: TargetY: " + targetY);
         double angle = getAngleFromTargetPoint(targetY);
 
-        return safeAngle(angle);
+        angle = safeAngle(angle);
+
+        return getYaw + ((angle-getYaw)/2);
+
+
     }
 
+    /**
+     * @param angleRequested the angle you want the robot to hold.
+     * @return safeAngle is the maximum angle the robot can hold.
+     */
     private double safeAngle(double angleRequested) {
         //given the angle requested, the change we need to make, and how much more we can turn without it going off the screen, return the maximun angle we can turn, given that it is NOT safe.
         //THIS IS LIKE 99% working. I tested a crap ton on codeHS.
@@ -156,7 +179,10 @@ public class manueverinator {
         return angleRequested;
     }
 
-
+    /**
+     * @param targetY how far out from the target you want to point at.
+     * @return the angle we want to hold relative to the target. 0 is strait ahead.
+     */
     private double getAngleFromTargetPoint(double targetY) {
         //takes in two points, x and y, that are relative to the limelight target / wall. returns the angle that the robot needs to hold, relative to the wall.
         //an angle of 0 is strait at the target, while 90 is all the way
@@ -165,17 +191,20 @@ public class manueverinator {
         double targetX = 0; //on the line out
 
         double deltaX = targetX - currentX; //get the difference in x values;
-        System.out.print("getAngleFrom...: TgtX: " + (int) targetX + " - CurrntX: " + (int) currentX + " = ");
-        System.out.println((int) deltaX + " = deltaX");
+        //System.out.print("getAngleFrom...: TgtX: " + (int) targetX + " - CurrntX: " + (int) currentX + " = ");
+        //System.out.println((int) deltaX + " = deltaX");
 
         double deltaY = Math.abs(targetY - currentY); //get the difference in y values;
-        System.out.print("getAngleFrom...: TgtY " + (int) targetY + " - CurrntY" + (int) currentY + " = ");
-        System.out.println((int) deltaY + " = deltaY");
+        //System.out.print("getAngleFrom...: TgtY " + (int) targetY + " - CurrntY" + (int) currentY + " = ");
+        //System.out.println((int) deltaY + " = deltaY");
 
         double radians = Math.atan2(deltaX, deltaY); //uses tangent to get angle.
         return Math.toDegrees(radians); //returns angle in radians.
     }
 
+    /**
+     * @return the target point in 3d space. Minimum -30 inches.
+     */
     private double locateTargetPoint() {
         //this finds the y value that we need to look at.
         //return -40; //returning 2 feet out from wall to the limelight at the moment. Once we get better at following things then we can
@@ -184,6 +213,9 @@ public class manueverinator {
     }
 
 
+    /**
+     * Lines up the robot to the target found by the limelight.
+     */
     public void lineUp() {
         if (tv.getDouble(0) == 0) { //no target found.
             System.out.println("main: ERROR : NO TARGET FOUND");
@@ -195,25 +227,30 @@ public class manueverinator {
 
         update3dPoints();//acquire new points, aka xOffset and yOffset. Adjust them to be robot center oriented.
 
-        System.out.println("main: X: " + (int) xOffset + " Y: " + (int) yOffset + " Angle: " + (int) getYaw);
+        //System.out.println("main: X: " + (int) xOffset + " Y: " + (int) yOffset + " Angle: " + (int) getYaw);
 
         double targetAngle = findAngle(); //get the angle we need. RELATIVE TO WALL
 
-        System.out.println("main: targetAngle: " + (int) targetAngle);
+        //System.out.println("main: targetAngle: " + (int) targetAngle);
 
         double followingTrackSpeed = calcFollowingCalcSpeed(); //NOT how far out we start linearly slowing... higher num = slowing more.
-        Robot.dt.angleHold(getYaw, targetAngle, followingTrackSpeed);
+        System.out.println(followingTrackSpeed);
+        Robot.dt.angleHold(getYaw, targetAngle,  followingTrackSpeed);//followingTrackSpeed);
     }
 
+    /**
+     * @return speed in which one should travel to the target. based on yOffset.
+     * preconditions: yOffset
+     */
     private double calcFollowingCalcSpeed() {
-        int distance = 100; //The distance where the slowing begins.
-        double max = 0.5;   //The distance maximum motor values.
-
-        distance = (int) (distance * (1 / max));
-        return Math.min(max, (yOffset/distance) + 0.1); //add 0.1 in order to ensure we always keep moving.
+        int distance = 200; //The distance where the slowing begins.
+        double max = -0.3;   //The distance maximum motor values.
+        //yOffset is negative. divided by distance. Will become a
+        return Math.max((yOffset/distance) - 0.3, -0.5); //subtract in order to ensure we always keep moving.
     }
 
     private float relativize(int yaw) { //this assumes two targets, one looking at 0 and 180.
+
         int modYaw = yaw + 89;
         int leftOver = (modYaw % 180) - 89;
         if (leftOver<-90) {
