@@ -58,8 +58,8 @@ public class Drivetrain {
     }
 
     public void resetTargetAngle() { //set the current target angle to where we currently are.
-        targetAngle = Robot.manueverinatorinator.getGetYaw();
-        System.out.println("RESET RBW: Target Angle: " + targetAngle + " Current Angle: " + Robot.manueverinatorinator.getGetYaw());
+        targetAngle = Robot.navX.getYaw();
+        System.out.println("RESET RBW: Target Angle: " + targetAngle + " Current Angle: " + Robot.navX.getYaw());
     }
 
     void angleHold(double currentAngle, double targetAngle, double y) {
@@ -78,20 +78,20 @@ public class Drivetrain {
     }
 
     public void RBW(double x, double y) { //rotate by wire
-        double currentAngle = Robot.manueverinatorinator.getGetYaw();
+        double currentAngle = Robot.navX.getAngle();
         targetAngle += x*2.5; //at 50 ticks a second, this is 50 degrees a second because the max x is 1.
         angleHold(currentAngle, targetAngle, y);
     }
 
     public void knightlyDrive(double x, double y) { //
-        double currentAngle = Robot.manueverinatorinator.getGetYaw();
+        double currentAngle = Robot.navX.getAngle();
         targetAngle = targetAngle + x*1.5*y; //at 50 ticks a second, this is 50 degrees a second because the max x is 1.
         //The faster we are moving forward (switch this data with encoder data) The faster we should rotate.
         angleHold(currentAngle, targetAngle, y);
     }
 
     public void fakeMechanum(double x, double y) {
-        double currentAngle = Robot.manueverinatorinator.getGetYaw();
+        double currentAngle = Robot.navX.getAngle();
         double desiredAngle = Math.atan2(x , y);
         double throttle = Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
         targetAngle = currentAngle + (2*throttle*(desiredAngle - currentAngle)); //changes the target angle by just a bit every time until the desired is up against the current angle.

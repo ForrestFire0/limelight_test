@@ -25,7 +25,6 @@ public class manueverinator {
     private double xOffset; // The horizontal shift the robot needs to make in order to align. FROM THE CENTER OF THE ROBOT.
     private double yOffset; // The vertical shift the robot needs to make in order to align. FROM THE CENTER OF THE ROBOT
 
-    private AHRS navx; //turn baby.
     private float getYaw;
     private double[] emptyDoubleArray = new double[6];
 
@@ -42,19 +41,9 @@ public class manueverinator {
         ty = limelight.getEntry("ty"); //Angle in y of degrees
         tv = limelight.getEntry("tv"); //have target?
 
-        navx = new AHRS(SPI.Port.kMXP);
-        navx.reset(); //reset to the start orientation
+
     }
 
-
-    /**
-     * resets the navx yaw value to 0. Relative to the current position of the robot.
-     */
-    public void navxAngleReset() {
-        navx.reset(); //reset to the field orientation
-        System.out.println("Angle has been reset.");
-        System.out.println(navx.getYaw() + " = 0");
-    }
 
     /**
      * aims directly at the target.
@@ -145,7 +134,7 @@ public class manueverinator {
 
         angle = safeAngle(angle);
 
-        return getYaw + ((angle-getYaw)/2);
+        return getYaw + ((angle - getYaw) / 2);
 
 
     }
@@ -223,7 +212,7 @@ public class manueverinator {
             return;
         }
 
-        getYaw = relativize((int) navx.getYaw());  //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
+        getYaw = relativize((int) Robot.navX.getYaw());  //get the yaw from the navx. MUST BE UPDATED TO BE RELATIVE TO THIS FRAME.
 
         update3dPoints();//acquire new points, aka xOffset and yOffset. Adjust them to be robot center oriented.
 
@@ -235,7 +224,7 @@ public class manueverinator {
 
         double followingTrackSpeed = calcFollowingCalcSpeed(); //NOT how far out we start linearly slowing... higher num = slowing more.
         System.out.println(followingTrackSpeed);
-        Robot.dt.angleHold(getYaw, targetAngle,  followingTrackSpeed);//followingTrackSpeed);
+        Robot.dt.angleHold(getYaw, targetAngle, followingTrackSpeed);//followingTrackSpeed);
     }
 
     /**
@@ -246,26 +235,18 @@ public class manueverinator {
         int distance = 200; //The distance where the slowing begins.
         double max = -0.3;   //The distance maximum motor values.
         //yOffset is negative. divided by distance. Will become a
-        return Math.max((yOffset/distance) - 0.3, -0.5); //subtract in order to ensure we always keep moving.
+        return Math.max((yOffset / distance) - 0.3, -0.5); //subtract in order to ensure we always keep moving.
     }
 
     private float relativize(int yaw) { //this assumes two targets, one looking at 0 and 180.
 
         int modYaw = yaw + 89;
         int leftOver = (modYaw % 180) - 89;
-        if (leftOver<-90) {
+        if (leftOver < -90) {
             leftOver += 180;
         }
 
         return leftOver;
-    }
-
-    double getGetYaw() {
-        return navx.getAngle();
-    }
-
-    public void printVelocities() { //it is for seeing if the x and y velocities are any good. Possible use for kightly drive.
-        System.out.println("Y Velocity" + navx.getVelocityY());
     }
 }
 
