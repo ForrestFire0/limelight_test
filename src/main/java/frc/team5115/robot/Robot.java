@@ -27,9 +27,10 @@ public class Robot extends TimedRobot {
             System.out.println("------------------");
             manueverinatorinator.lineUp(); //follow to the thingy.
         }
+
         else {
-            dt.RBW(joy.getRawAxis(0), joy.getRawAxis(1)); //Drive by wire based on the angle.
-            //dt.fakeMechanum(joy.getRawAxis(0), joy.getRawAxis(1));
+            dt.knightlyDrive(joy.getRawAxis(0), joy.getRawAxis(1));
+            //dt.RBW(joy.getRawAxis(0), joy.getRawAxis(1)); //Drive by wire based on the angle.
         }
 
         if(joy.getRawButton(9)) { //press this button to calibrate.
@@ -59,7 +60,6 @@ public class Robot extends TimedRobot {
  * Generate path to target, based on data currently found / averaged.
  * We have a path found. This path describes the angle we need to hold for this current angle. We use this curve, find the angle we want when in the position we are, then go to that angle. Forget the path.
  *
-
  */
 
 

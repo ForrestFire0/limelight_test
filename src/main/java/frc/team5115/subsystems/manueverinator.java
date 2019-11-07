@@ -1,13 +1,9 @@
 package frc.team5115.subsystems;
 
-import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.SPI;
 import frc.team5115.robot.Robot;
-
-import javax.naming.spi.ObjectFactory;
 
 // Docs: http://docs.limelightvision.io/en/latest/networktables_api.html
 
@@ -26,10 +22,6 @@ public class manueverinator {
     private double yOffset; // The vertical shift the robot needs to make in order to align. FROM THE CENTER OF THE ROBOT
 
     private float getYaw;
-    private double[] emptyDoubleArray = new double[6];
-
-    private final double Kp = 0.2; //a modifier to the aim function.
-    private final double deadZoneDegrees = 5;
 
     /**
      * Creates the limelight table entries.
@@ -40,8 +32,6 @@ public class manueverinator {
         tx = limelight.getEntry("tx"); //Angle in x of degrees
         ty = limelight.getEntry("ty"); //Angle in y of degrees
         tv = limelight.getEntry("tv"); //have target?
-
-
     }
 
 
@@ -62,7 +52,7 @@ public class manueverinator {
      */
     public void aim() {
         if (tv.getDouble(0) == 1) {
-            Robot.dt.angleHold(ty.getDouble(0), 0);
+            Robot.dt.angleHold(ty.getDouble(0));
         } else {
             System.out.println("No target found. Stopping.");
             //In the future, maybe we should add a scanning function.
@@ -77,7 +67,6 @@ public class manueverinator {
         System.out.println("tx: " + tx.getDouble(0));
         System.out.println("ty: " + ty.getDouble(0));
         System.out.println("tv: " + tv.getDouble(0));
-        //System.out.println(camtran);
     }
 
     private void update3dPoints() {
@@ -85,7 +74,7 @@ public class manueverinator {
         //calculate values from navx and other things.
         System.out.println("update3DPoints: Using Math");
         final double targetHeight = 36; //is it 36 inches???
-        final double cameraHeight = 8; //update but it probably doesnt matter.
+        final double cameraHeight = 8; //update but it probably doesn't matter.
         final double cameraAngle = 23; //update
         double hypotenuse = (targetHeight - cameraHeight) / Math.tan(Math.toRadians(ty.getDouble(0) + cameraAngle)); //
         //System.out.println(ty.getDouble(0) + cameraAngle + " = angle");
@@ -97,17 +86,13 @@ public class manueverinator {
 
         final double relativeLLx = 0; //Positive value means the limelight is to the right of the center, while negative is to the left.
         final double relativeLLy = -13; //negative 20 means that the robot location is 20 inches. behind the limelight.
-        //System.out.print("X=" + xOffset + " - " +
-        //       relativeLLx*cos(getYaw) + " - " +
-        //       relativeLLy*sin(getYaw));
+        //System.out.print("X=" + xOffset + " - " + relativeLLx*cos(getYaw) + " - " + relativeLLy*sin(getYaw));
 
         xOffset = xOffset - (relativeLLx * cos(getYaw)) - (relativeLLy * sin(getYaw));
         //System.out.println(" = " + xOffset);
 
 
-        //System.out.print("Y=" + yOffset + " - " +
-        //        relativeLLy*cos(getYaw) + " - " +
-        //       relativeLLx*sin(getYaw));
+        //System.out.print("Y=" + yOffset + " - " + relativeLLy*cos(getYaw) + " - " + relativeLLx*sin(getYaw));
 
         yOffset = yOffset - (relativeLLy * cos(getYaw)) - (relativeLLx * sin(getYaw));
         //System.out.println(" = " + yOffset);
@@ -135,8 +120,6 @@ public class manueverinator {
         angle = safeAngle(angle);
 
         return getYaw + ((angle - getYaw) / 2);
-
-
     }
 
     /**
@@ -184,7 +167,7 @@ public class manueverinator {
         //System.out.println((int) deltaX + " = deltaX");
 
         double deltaY = Math.abs(targetY - currentY); //get the difference in y values;
-        //System.out.print("getAngleFrom...: TgtY " + (int) targetY + " - CurrntY" + (int) currentY + " = ");
+        //System.out.print("getAngleFrom...: TgtY " + (int) targetY + " - CurrentY" + (int) currentY + " = ");
         //System.out.println((int) deltaY + " = deltaY");
 
         double radians = Math.atan2(deltaX, deltaY); //uses tangent to get angle.
@@ -233,9 +216,8 @@ public class manueverinator {
      */
     private double calcFollowingCalcSpeed() {
         int distance = 200; //The distance where the slowing begins.
-        double max = -0.3;   //The distance maximum motor values.
-        //yOffset is negative. divided by distance. Will become a
-        return Math.max((yOffset / distance) - 0.3, -0.5); //subtract in order to ensure we always keep moving.
+        double max = -0.5;   //The distance maximum motor values.
+        return Math.max((yOffset / distance) - 0.3, max); //subtract in order to ensure we always keep moving.
     }
 
     private float relativize(int yaw) { //this assumes two targets, one looking at 0 and 180.
@@ -255,3 +237,23 @@ public class manueverinator {
  * relativize added. Check functionality of relativize.
  * Calc following speed added. Edit min and maxes to do things.
 */
+
+/*
+Forrest: Tele-auto
+    In:
+    Out. Requested Movement of the motors.
+Olivia and Laura: Feedback, PIDs.
+    In: Positions and states of Robot parts
+    Out: (End) Movements of motors and pneumatics on robot. Drive train
+Mathew: Scouting Apps, AI for Vision
+    In: (Begin) Nothing, get camera feed himself
+    Out: Location of game objects relative to robot. (Format and abstraction TBD)
+Rohit: Video Encoding
+    In: None, Camera feed
+    Out: (End) None, delivered to robot.
+Luke: Controller Wrapper. Easy to switch controllers, going from axes to movement.
+    In: (Begin) Controllers
+    Out: X and Y from controller
+Jerrison: Autonomous stuff. Map out init profiles.
+ */
+

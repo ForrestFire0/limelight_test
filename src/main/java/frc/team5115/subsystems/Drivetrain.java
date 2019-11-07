@@ -11,10 +11,7 @@ public class Drivetrain {
     private TalonSRX backLeft;
     private TalonSRX backRight;
     private double targetAngle;
-    /*
-    private Encoder leftEncoder;
-    private Encoder rightEncoder;
-     */
+
     public Drivetrain() {  //instantiation of the objects
         frontLeft = new TalonSRX(1);
         frontRight = new TalonSRX(2);
@@ -26,13 +23,6 @@ public class Drivetrain {
         backLeft.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
         backRight.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
 
-
-
-        /*leftEncoder = new Encoder(RobotMap.leftEncoder1, RobotMap.leftEncoder2, true, CounterBase.EncodingType.k4X);
-        rightEncoder = new Encoder(RobotMap.rightEncoder1, RobotMap.rightEncoder2, true, CounterBase.EncodingType.k4X);
-        leftEncoder.setDistancePerPulse(12.566 / 250);	// 250 CPR, 4 pulses per cycle, 12.566 inches circumference on wheel
-        rightEncoder.setDistancePerPulse(12.566 / 250);
-         */
     }
 
     public void drive(double y, double x, double throttle) { //Change the drive output
@@ -58,8 +48,8 @@ public class Drivetrain {
     }
 
     public void resetTargetAngle() { //set the current target angle to where we currently are.
-        targetAngle = Robot.navX.getYaw();
-        System.out.println("RESET RBW: Target Angle: " + targetAngle + " Current Angle: " + Robot.navX.getYaw());
+        targetAngle = Robot.navX.getAngle();
+        System.out.println("RESET RBW: Target Angle: " + targetAngle + " Current Angle: " + Robot.navX.getAngle());
     }
 
     void angleHold(double currentAngle, double targetAngle, double y) {
@@ -73,8 +63,8 @@ public class Drivetrain {
         this.drive(y,P,1);
     }
 
-    void angleHold(double currentAngle, double targetAngle) { //Overridden magic.
-        this.angleHold(currentAngle, targetAngle, 0);
+    void angleHold(double currentAngle) { //Overridden magic.
+        this.angleHold(currentAngle, 0, 0);
     }
 
     public void RBW(double x, double y) { //rotate by wire
@@ -85,16 +75,20 @@ public class Drivetrain {
 
     public void knightlyDrive(double x, double y) { //
         double currentAngle = Robot.navX.getAngle();
-        targetAngle = targetAngle + x*1.5*y; //at 50 ticks a second, this is 50 degrees a second because the max x is 1.
+        targetAngle = targetAngle - x*3*y; //at 50 ticks a second, this is 50 degrees a second because the max x is 1.
         //The faster we are moving forward (switch this data with encoder data) The faster we should rotate.
         angleHold(currentAngle, targetAngle, y);
     }
 
     public void fakeMechanum(double x, double y) {
+        if(Math.abs(x)<0.05 && Math.abs(y)<0.05) return;
+
         double currentAngle = Robot.navX.getAngle();
         double desiredAngle = Math.atan2(x , y);
         double throttle = Math.sqrt(Math.pow(x,2) + Math.pow(y,2));
         targetAngle = currentAngle + (2*throttle*(desiredAngle - currentAngle)); //changes the target angle by just a bit every time until the desired is up against the current angle.
-        angleHold(currentAngle, targetAngle, throttle);
+        targetAngle = Math.toDegrees(targetAngle);
+        System.out.println("Current Angle: " + currentAngle + " targetAngle: " + targetAngle);
+        //angleHold(currentAngle, targetAngle, throttle);
     }
 }
